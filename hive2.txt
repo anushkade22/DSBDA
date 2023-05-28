@@ -1,0 +1,55 @@
+-- Create Customer_info table
+CREATE TABLE Customer_info (
+  Cust_ID INT,
+  Cust_Name STRING,
+  Order_ID INT
+);
+
+-- Create order_info table
+CREATE TABLE order_info (
+  Order_ID INT,
+  Item_ID INT,
+  Quantity INT
+);
+
+-- Create item_info table
+CREATE TABLE item_info (
+  Item_ID INT,
+  Item_Name STRING,
+  Item_Price DECIMAL(10, 2)
+);
+
+-- Load data into Customer_info table
+LOAD DATA LOCAL INPATH 'path/to/customer_info.csv' INTO TABLE Customer_info;
+
+-- Load data into order_info table
+LOAD DATA LOCAL INPATH 'path/to/order_info.csv' INTO TABLE order_info;
+
+-- Load data into item_info table
+LOAD DATA LOCAL INPATH 'path/to/item_info.csv' INTO TABLE item_info;
+
+-- Perform a join operation
+SELECT ci.Cust_ID, ci.Cust_Name, oi.Order_ID, ii.Item_Name, oi.Quantity
+FROM Customer_info ci
+JOIN order_info oi ON ci.Order_ID = oi.Order_ID
+JOIN item_info ii ON oi.Item_ID = ii.Item_ID;
+
+-- Create an index on Customer_info table
+CREATE INDEX idx_customer_info ON TABLE Customer_info (Cust_ID) AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler' WITH DEFERRED REBUILD;
+
+-- Calculate total sales
+SELECT SUM(ii.Item_Price * oi.Quantity) AS total_sales
+FROM order_info oi
+JOIN item_info ii ON oi.Item_ID = ii.Item_ID;
+
+-- Calculate average sales
+SELECT AVG(ii.Item_Price * oi.Quantity) AS average_sales
+FROM order_info oi
+JOIN item_info ii ON oi.Item_ID = ii.Item_ID;
+
+-- Find order details with maximum cost
+SELECT oi.Order_ID, ii.Item_Name, oi.Quantity, (ii.Item_Price * oi.Quantity) AS total_cost
+FROM order_info oi
+JOIN item_info ii ON oi.Item_ID = ii.Item_ID
+ORDER BY total_cost DESC
+LIMIT 1;
